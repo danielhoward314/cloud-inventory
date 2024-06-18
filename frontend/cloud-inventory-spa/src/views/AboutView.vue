@@ -18,9 +18,9 @@ function getMessage() {
     },
     method: 'POST',
     mode: "cors",
-    body: JSON.stringify({ name: 'Daniel' }),
+    body: JSON.stringify({ type: 'email', email: 'email@here', password: 'antsinmypantsneedtodance' }),
   };
-  fetch(`http://localhost:8080/v1/say_hello`, fetchOptions)
+  fetch(`http://localhost:8080/v1/signup`, fetchOptions)
       .then((res) => res.json())
       .then((res) =>{
         console.log(res)

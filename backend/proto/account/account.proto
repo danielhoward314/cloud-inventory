@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package account;
+
+option go_package = "github.com/danielhoward314/cloud-inventory/backend/protogen";
+
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+
+service AccountService {
+  rpc Signup (SignupRequest) returns (SignupResponse) {
+    option (google.api.http) = {
+      post: "/v1/signup"
+      body: "*"
+    };
+  }
+}
+
+message SignupRequest {
+  string type = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message SignupResponse {
+  string type = 1;
+  string email = 2;
+  string password = 3;
+  string hash = 4;
+  bool hash_matches = 5;
+}

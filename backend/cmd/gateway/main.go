@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	hellopb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/hello"
+	accountpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account"
 )
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 	// Register gRPC server endpoint
 	// Note: Make sure the gRPC server is running properly and accessible
 	mux := runtime.NewServeMux()
-	err = hellopb.RegisterMyServiceHandler(context.Background(), mux, conn)
+	err = accountpb.RegisterAccountServiceHandler(context.Background(), mux, conn)
 	if err != nil {
 		log.Fatalf("failed to register the order server: %v", err)
 	}
