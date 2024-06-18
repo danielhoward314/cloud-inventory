@@ -7,21 +7,19 @@ option go_package = "github.com/danielhoward314/cloud-inventory/backend/protogen
 import "google/api/annotations.proto";
 import "google/api/http.proto";
 
-// Define the service
 service MyService {
   rpc SayHello (HelloRequest) returns (HelloResponse) {
     option (google.api.http) = {
-        get: "/v0/hello",
+      post: "/v1/say_hello"
+      body: "*"
     };
-  };
+  }
 }
 
-// Define the request message
 message HelloRequest {
   string name = 1;
 }
 
-// Define the response message
 message HelloResponse {
   string message = 1;
 }

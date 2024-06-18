@@ -21,7 +21,27 @@ Requires 3 separate terminal tabs:
 ```
 go run backend/cmd/api/main.go
 go run backend/cmd/gateway/main.go
-npm run dev
+cd frontend/cloud-inventory-spa && npm run dev
 ```
 
 The API listens at TCP address `[::]:50051`, the gateway listens at `http://localhost:8080`, and the Vue dev server serves the SPA at `http://localhost:5173`.
+
+## Running on Docker containers
+
+A prerequisite is to modify your hosts file so some hostnames will resolve to the loopback address:
+
+```
+sudo vi /etc/hosts
+
+# append these lines
+127.0.0.1 cloud-inventory-ui.local
+::1 cloud-inventory-ui.local
+127.0.0.1 cloud-inventory-gateway.local
+::1 cloud-inventory-gateway.local
+```
+
+Use docker compose to build the `api`, `gateway`, and `ui` containers:
+
+```
+docker compose --file compose.yml up
+```

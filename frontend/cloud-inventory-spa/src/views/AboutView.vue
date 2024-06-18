@@ -12,7 +12,15 @@
 import { ref } from 'vue'
 const message = ref('')
 function getMessage() {
-  fetch("http://localhost:8080/v0/hello")
+  const fetchOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+    mode: "cors",
+    body: JSON.stringify({ name: 'Daniel' }),
+  };
+  fetch(`http://localhost:8080/v1/say_hello`, fetchOptions)
       .then((res) => res.json())
       .then((res) =>{
         console.log(res)

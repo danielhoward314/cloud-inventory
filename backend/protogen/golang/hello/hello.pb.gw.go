@@ -31,18 +31,11 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
-var (
-	filter_MyService_SayHello_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_MyService_SayHello_0(ctx context.Context, marshaler runtime.Marshaler, client MyServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq HelloRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_MyService_SayHello_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -55,10 +48,7 @@ func local_request_MyService_SayHello_0(ctx context.Context, marshaler runtime.M
 	var protoReq HelloRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_MyService_SayHello_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -73,7 +63,7 @@ func local_request_MyService_SayHello_0(ctx context.Context, marshaler runtime.M
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterMyServiceHandlerFromEndpoint instead.
 func RegisterMyServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server MyServiceServer) error {
 
-	mux.Handle("GET", pattern_MyService_SayHello_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_MyService_SayHello_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -81,7 +71,7 @@ func RegisterMyServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/myservice.MyService/SayHello", runtime.WithHTTPPathPattern("/v0/hello"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/myservice.MyService/SayHello", runtime.WithHTTPPathPattern("/v1/say_hello"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -139,13 +129,13 @@ func RegisterMyServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *
 // "MyServiceClient" to call the correct interceptors.
 func RegisterMyServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client MyServiceClient) error {
 
-	mux.Handle("GET", pattern_MyService_SayHello_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_MyService_SayHello_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/myservice.MyService/SayHello", runtime.WithHTTPPathPattern("/v0/hello"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/myservice.MyService/SayHello", runtime.WithHTTPPathPattern("/v1/say_hello"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -165,7 +155,7 @@ func RegisterMyServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_MyService_SayHello_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "hello"}, ""))
+	pattern_MyService_SayHello_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "say_hello"}, ""))
 )
 
 var (

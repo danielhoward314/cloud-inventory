@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  api:
+    container_name: api
+    build:
+      context: ./backend
+      target: api
+      dockerfile: Dockerfile
+    env_file:
+      - backend/env/api
+    networks:
+      - backend
+  gateway:
+    container_name: gateway
+    build:
+      context: ./backend
+      target: gateway
+      dockerfile: Dockerfile
+    env_file:
+      - backend/env/gateway
+    networks:
+      - backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+  ui:
+    build:
+      context: ./frontend/cloud-inventory-spa
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: always
+    networks:
+      backend:
+        aliases:
+          - cloud-inventory-ui.local
+
+networks:
+  backend:
+    driver: bridge
