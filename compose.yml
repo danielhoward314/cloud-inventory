@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   api:
-    container_name: api
+    container_name: cloud-inventory-api
     build:
       context: ./backend
       target: api
@@ -11,7 +11,7 @@ services:
     networks:
       - backend
   gateway:
-    container_name: gateway
+    container_name: cloud-inventory-gateway
     build:
       context: ./backend
       target: gateway
@@ -25,6 +25,7 @@ services:
     depends_on:
       - api
   ui:
+    container_name: cloud-inventory-ui
     build:
       context: ./frontend/cloud-inventory-spa
       dockerfile: Dockerfile
@@ -35,6 +36,31 @@ services:
       backend:
         aliases:
           - cloud-inventory-ui.local
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - $HOME/docker/volumes/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - backend
+  cli:
+    container_name: cloud-inventory-cli
+    build:
+      context: ./backend
+      target: cli
+      dockerfile: Dockerfile.cli
+    networks:
+      - backend
+    env_file:
+      - backend/env/postgres
+    depends_on:
+      - postgres
 
 networks:
   backend:

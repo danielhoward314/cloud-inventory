@@ -14,16 +14,36 @@ service AccountService {
       body: "*"
     };
   }
+  rpc Login (LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/login"
+      body: "*"
+    };
+  }
 }
 
 message SignupRequest {
-  string type = 1;
+  string idp = 1;
   string email = 2;
   string password = 3;
 }
 
 message SignupResponse {
-  string type = 1;
+  string idp = 1;
+  string email = 2;
+  string password = 3;
+  string hash = 4;
+  bool hash_matches = 5;
+}
+
+message LoginRequest {
+  string idp = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message LoginResponse {
+  string idp = 1;
   string email = 2;
   string password = 3;
   string hash = 4;
