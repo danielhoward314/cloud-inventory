@@ -9,6 +9,9 @@ RUN go mod download
 # Copy all .go files
 COPY . .
 
+# Build the CLI binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o /cloud-inventory-cli ./cmd/cli/main.go
+
 # Build the API binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /cloud-inventory-api ./cmd/api/main.go
 
@@ -30,3 +33,11 @@ FROM scratch as gateway
 COPY --from=gobase /cloud-inventory-gateway /bin/gateway
 EXPOSE 8080
 CMD ["/bin/gateway"]
+
+############################################
+# cli
+############################################
+FROM ubuntu:latest as cli
+COPY --from=gobase /cloud-inventory-cli /bin/cli
+RUN chmod +x /bin/cli
+ENTRYPOINT ["/bin/cli"]

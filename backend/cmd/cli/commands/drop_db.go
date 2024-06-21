@@ -11,15 +11,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createDBCmd is a subcommand to create a database
-var createDBCmd = &cobra.Command{
+// dropDBCmd is a subcommand to drop a database
+var dropDBCmd = &cobra.Command{
 	Use:   "db",
-	Short: "Runs `CREATE DATABASE <name>;` where <name> is sourced from env var POSTGRES_APPLICATION_DATABASE.",
-	Long:  "Runs `CREATE DATABASE <name>;` where <name> is sourced from env var POSTGRES_APPLICATION_DATABASE.",
-	Run:   createDB,
+	Short: "Runs `DROP DATABASE <name>;` where <name> is sourced from env var POSTGRES_APPLICATION_DATABASE.",
+	Long:  "Runs `DROP DATABASE <name>;` where <name> is sourced from env var POSTGRES_APPLICATION_DATABASE.",
+	Run:   dropDB,
 }
 
-func createDB(cobraCmd *cobra.Command, args []string) {
+func dropDB(cobraCmd *cobra.Command, args []string) {
 	host := os.Getenv("POSTGRES_HOST")
 	port := os.Getenv("POSTGRES_PORT")
 	password := os.Getenv("POSTGRES_PASSWORD")
@@ -45,17 +45,17 @@ func createDB(cobraCmd *cobra.Command, args []string) {
 
 	applicationDB := os.Getenv("POSTGRES_APPLICATION_DATABASE")
 	if applicationDB == "" {
-		log.Fatal("Error creating database: empty application database name")
+		log.Fatal("Error dropping database: empty application database name")
 	}
-	createDBSQL := fmt.Sprintf("CREATE DATABASE %s", applicationDB)
+	createDBSQL := fmt.Sprintf("DROP DATABASE %s", applicationDB)
 	_, err = db.Exec(createDBSQL)
 	if err != nil {
-		log.Fatal("Error creating database:", err)
+		log.Fatal("Error dropping database:", err)
 	}
 
-	fmt.Printf("Database %s created successfully.\n", applicationDB)
+	fmt.Printf("Database %s dropped successfully.\n", applicationDB)
 }
 
 func init() {
-	createCmd.AddCommand(createDBCmd)
+	dropCmd.AddCommand(dropDBCmd)
 }

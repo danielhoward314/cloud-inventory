@@ -54,7 +54,9 @@ services:
     build:
       context: ./backend
       target: cli
-      dockerfile: Dockerfile.cli
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend/cmd/cli/commands/migrations:/migrations
     networks:
       - backend
     env_file:
