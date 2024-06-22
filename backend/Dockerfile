@@ -9,6 +9,8 @@ RUN go mod download
 # Copy all .go files
 COPY . .
 
+COPY /templates /templates
+
 # Build the CLI binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /cloud-inventory-cli ./cmd/cli/main.go
 
@@ -23,6 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /cloud-inventory-gateway ./cmd/gateway/
 ############################################
 FROM scratch as api
 COPY --from=gobase /cloud-inventory-api /bin/api
+COPY --from=gobase /templates /templates
 EXPOSE 50051
 CMD ["/bin/api"]
 
