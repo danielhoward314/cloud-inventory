@@ -7,11 +7,12 @@ type Administrator struct {
 	PasswordHashType string `json:"password_hash_type"`
 	PasswordHash     string `json:"password_hash"`
 	OrganizationID   string `json:"organization_id"`
+	Verified         bool   `json:"verified"`
 }
 
 type Administrators interface {
-	Create(administrator *Administrator) (string, error)
-	// Read(id string) (*Administrator, error)
-	// Update(*Administrator) (*Administrator, error)
+	Create(administrator *Administrator, passwordCleartext string) (string, error)
+	Read(id string) (*Administrator, error)
+	Update(*Administrator) error
 	// Delete(id string) (*Administrator, error)
 }

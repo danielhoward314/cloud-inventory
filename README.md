@@ -41,6 +41,8 @@ docker compose --file compose.yml build
 
 The `ui` container is an nginx server that serves the vite production build of the Vue SPA as static files.
 
+In order to create a Cloud Inventory account, navigate to `cloud-inventory-ui.local/signup`.
+
 ## DB Migrations
 
 The `cli` container is a [cobra CLI](https://github.com/spf13/cobra) that exposes commands for initializing the application database. The CLI exposes additional commands that leverage [goose](https://github.com/pressly/goose) for executing the SQL migration files against the application database.
@@ -113,3 +115,7 @@ The generated files are created in the `backend/protogen/golang` directory.
 
 The [gRPC-gateway docs](https://grpc-ecosystem.github.io/grpc-gateway/) give a great summary of their usage:
 > "gRPC-Gateway is a plugin of protoc. It reads a gRPC service definition and generates a reverse-proxy server which translates a RESTful JSON API into gRPC. This server is generated according to custom options in your gRPC definition."
+
+## maildev SMTP mock server
+
+The signup flow for this application requires new users verify their email with a code sent via email. In local development, I use [maildev](https://github.com/maildev/maildev) as a mock SMTP server. In addition to the SMPT server, the `maildev` container also spins up a UI at `http://0.0.0.0:1080/`.

@@ -56,6 +56,27 @@ func (rds *registrationDatastore) Create(registration *dao.Registration) (string
 	return token, emailCode, nil
 }
 
+func (rds *registrationDatastore) Read(token string) (*dao.Registration, error) {
+	registrationJSON, err := rds.client.Get(context.Background(), token).Result()
+	if err != nil {
+		return nil, err
+	}
+	var registration dao.Registration
+	err = json.Unmarshal([]byte(registrationJSON), &registration)
+	if err != nil {
+		return nil, err
+	}
+	return &registration, nil
+}
+
+func (rds *registrationDatastore) Delete(token string) error {
+	cmdStatus := rds.client.Del(context.Background(), token)
+	if cmdStatus.Err() != nil {
+		return cmdStatus.Err()
+	}
+	return nil
+}
+
 func generateRandomString(n int) (string, error) {
 	b := make([]byte, n)
 	for i := range b {

@@ -60,8 +60,14 @@ func main() {
 		DB:   0, // use default DB
 	})
 
+	// JWT secret for user sesssions
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("error: JWT_SECRET is empty")
+	}
+
 	// dependency injection
-	cfg, err := config.NewAPIConfig(db, redisClient)
+	cfg, err := config.NewAPIConfig(db, redisClient, jwtSecret)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

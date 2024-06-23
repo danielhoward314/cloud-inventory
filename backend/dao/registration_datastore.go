@@ -9,4 +9,6 @@ type Registration struct {
 // RegistrationDatastore defines the interface for registration operations in a key-value datastore
 type RegistrationDatastore interface {
 	Create(registration *Registration) (string, string, error)
+	Read(token string) (*Registration, error)
+	Delete(token string) error
 }
