@@ -108,3 +108,8 @@ make protoc
 ```
 
 The generated files are created in the `backend/protogen/golang` directory.
+
+### gRPC-gateway
+
+The [gRPC-gateway docs](https://grpc-ecosystem.github.io/grpc-gateway/) give a great summary of their usage:
+> "gRPC-Gateway is a plugin of protoc. It reads a gRPC service definition and generates a reverse-proxy server which translates a RESTful JSON API into gRPC. This server is generated according to custom options in your gRPC definition."
