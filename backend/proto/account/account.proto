@@ -39,5 +39,5 @@ message VerificationRequest {
 }
 
 message VerificationResponse {
-  int32 status = 1;
+  string jwt = 1;
 }

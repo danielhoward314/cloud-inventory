@@ -22,7 +22,7 @@ type registrationDatastore struct {
 	client *redis.Client
 }
 
-// NewRegistrationDatastore returns a redis implementation for the key-value datastore
+// NewRegistrationDatastore returns a redis implementation for the registration key-value datastore
 func NewRegistrationDatastore(client *redis.Client) dao.RegistrationDatastore {
 	return &registrationDatastore{
 		client: client,

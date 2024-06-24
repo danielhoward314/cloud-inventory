@@ -38,6 +38,7 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useSignupStore } from '../stores/signupToken';
 import router from '@/router';
+import constants from '@/consts/consts';
 
 export default {
   setup() {
@@ -78,7 +79,8 @@ export default {
       fetch('http://localhost:8080/v1/verify', fetchOptions)
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
+        if (data.jwt) {
+          localStorage.setItem(constants.localStorageKeys.sessionJWT, data.jwt)
           router.push('/home')
         }
       })

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
+import constants from '@/consts/consts';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,19 +12,34 @@ const router = createRouter({
       component: SignupView,
     },
     {
+      path: '/login',
+      name: 'login',
+      component: LoginView
+    },
+    {
       path: '/home',
       name: 'home',
-      component: HomeView,
+      meta: { requiresAuth: true },
+      // lazy-load when the route is visited
+      component: () => import('../views/HomeView.vue')
     }
-    // {
-    //   path: '/about',
-    //   name: 'about',
-    //   // route level code-splitting
-    //   // this generates a separate chunk (About.[hash].js) for this route
-    //   // which is lazy-loaded when the route is visited.
-    //   component: () => import('../views/AboutView.vue')
-    // }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const sessionJWT = localStorage.getItem(constants.localStorageKeys.sessionJWT);
+  // TODO: validate sessionJWT
+  /*
+    with only this implementation,
+    a user could do `localStorage.setItem('sessionJWT', 'not a real jwt');`
+    and gain access without authenticating
+  */
+  if (requiresAuth && !sessionJWT) {
+    next('/login');
+  } else {
+    next();
+  }
+});
 
 export default router

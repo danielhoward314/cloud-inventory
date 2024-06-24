@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"html/template"
 	"log/slog"
-	"net/http"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,24 +22,24 @@ const (
 	emailFrom = "no.reply@CloudInventory.com"
 )
 
+// accountService implements the account gRPC service
+type accountService struct {
+	accountpb.UnimplementedAccountServiceServer
+	datastore             *dao.Datastore
+	registrationDatastore dao.RegistrationDatastore
+	sessionDatastore      dao.SessionDatastore
+	smtpDialer            *gomail.Dialer
+}
+
 func NewAccountService(cfg *config.APIConfig) accountpb.AccountServiceServer {
 	smtpDialer := gomail.NewDialer(cfg.GetSMTPHost(), cfg.GetSMTPPort(), "", "")
 	smtpDialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	return &accountService{
 		datastore:             cfg.GetDatastore(),
-		jwtSecret:             cfg.GetJWTSecret(),
 		registrationDatastore: cfg.GetRegistrationDatastore(),
+		sessionDatastore:      cfg.GetSessionDatastore(),
 		smtpDialer:            smtpDialer,
 	}
-}
-
-// accountService implements the account gRPC service
-type accountService struct {
-	accountpb.UnimplementedAccountServiceServer
-	datastore             *dao.Datastore
-	jwtSecret             string
-	registrationDatastore dao.RegistrationDatastore
-	smtpDialer            *gomail.Dialer
 }
 
 // Signup creates a new organization and admin, and triggers primary admin email verification
@@ -124,39 +123,33 @@ func (as *accountService) Verify(ctx context.Context, request *accountpb.Verific
 	registration, err := as.registrationDatastore.Read(request.Token)
 	if err != nil {
 		if err == redis.Nil {
-			return &accountpb.VerificationResponse{
-				Status: http.StatusNotFound,
-			}, nil
+			return nil, status.Errorf(codes.NotFound, "registration token not found: %s", err.Error())
 		}
-		return &accountpb.VerificationResponse{
-			Status: http.StatusInternalServerError,
-		}, nil
+		return nil, status.Errorf(codes.Internal, "failed to read registration token: %s", err.Error())
 	}
 	if registration.EmailCode != request.VerificationCode {
-		return &accountpb.VerificationResponse{
-			Status: http.StatusForbidden,
-		}, nil
+		return nil, status.Errorf(codes.PermissionDenied, "verification code not authorized")
 	}
 	administrator, err := as.datastore.Administrators.Read(registration.AdministratorID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &accountpb.VerificationResponse{
-				Status: http.StatusNotFound,
-			}, nil
+			return nil, status.Errorf(codes.NotFound, "administrator not found: %s", err.Error())
 		}
-		return &accountpb.VerificationResponse{
-			Status: http.StatusInternalServerError,
-		}, nil
+		return nil, status.Errorf(codes.Internal, "failed to read administrator data: %s", err.Error())
 	}
 	administrator.Verified = true
 	err = as.datastore.Administrators.Update(administrator)
 	if err != nil {
-		return &accountpb.VerificationResponse{
-			Status: http.StatusInternalServerError,
-		}, nil
+		return nil, status.Errorf(codes.Internal, "failed to update administrator data: %s", err.Error())
 	}
-	// TODO: create session for user
+	jwt, err := as.sessionDatastore.Create(&dao.Session{
+		OrganizationID:  administrator.OrganizationID,
+		AdministratorID: administrator.ID,
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate jwt: %s", err.Error())
+	}
 	return &accountpb.VerificationResponse{
-		Status: http.StatusOK,
+		Jwt: jwt,
 	}, nil
 }

@@ -14,13 +14,13 @@ import (
 
 type APIConfig struct {
 	datastore             *dao.Datastore
-	jwtSecret             string
 	registrationDatastore dao.RegistrationDatastore
+	sessionDatastore      dao.SessionDatastore
 	smtpHost              string
 	smtpPort              int
 }
 
-func NewAPIConfig(db *sql.DB, redisClient *redis.Client, jwtSecret string) (*APIConfig, error) {
+func NewAPIConfig(db *sql.DB, redisClient *redis.Client, sessionJWTSecret string) (*APIConfig, error) {
 	smtpHost := os.Getenv("SMTP_HOST")
 	if smtpHost == "" {
 		return nil, errors.New("error: SMTP_HOST is empty")
@@ -35,8 +35,8 @@ func NewAPIConfig(db *sql.DB, redisClient *redis.Client, jwtSecret string) (*API
 	}
 	return &APIConfig{
 		datastore:             ciPostgres.NewDatastore(db),
-		jwtSecret:             jwtSecret,
 		registrationDatastore: ciRedis.NewRegistrationDatastore(redisClient),
+		sessionDatastore:      ciRedis.NewSessionDatastore(redisClient, sessionJWTSecret),
 		smtpHost:              smtpHost,
 		smtpPort:              smtpPort,
 	}, nil
@@ -46,12 +46,12 @@ func (cfg *APIConfig) GetDatastore() *dao.Datastore {
 	return cfg.datastore
 }
 
-func (cfg *APIConfig) GetJWTSecret() string {
-	return cfg.jwtSecret
-}
-
 func (cfg *APIConfig) GetRegistrationDatastore() dao.RegistrationDatastore {
 	return cfg.registrationDatastore
+}
+
+func (cfg *APIConfig) GetSessionDatastore() dao.SessionDatastore {
+	return cfg.sessionDatastore
 }
 
 func (cfg *APIConfig) GetSMTPHost() string {

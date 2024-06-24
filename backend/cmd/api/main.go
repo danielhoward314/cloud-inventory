@@ -61,9 +61,9 @@ func main() {
 	})
 
 	// JWT secret for user sesssions
-	jwtSecret := os.Getenv("JWT_SECRET")
+	jwtSecret := os.Getenv("JWT_SESSION_SECRET")
 	if jwtSecret == "" {
-		log.Fatal("error: JWT_SECRET is empty")
+		log.Fatal("error: JWT_SESSION_SECRET is empty")
 	}
 
 	// dependency injection
