@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/danielhoward314/cloud-inventory/backend/protogen";
+
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+
+service AuthService {
+  rpc ValidateSession (ValidateSessionRequest) returns (ValidateSessionResponse) {
+    option (google.api.http) = {
+      post: "/v1/session"
+      body: "*"
+    };
+  }
+}
+
+message ValidateSessionRequest {
+    string jwt = 1;
+}
+
+message ValidateSessionResponse {
+    string jwt = 1;
+}

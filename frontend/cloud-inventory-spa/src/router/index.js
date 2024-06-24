@@ -7,6 +7,11 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path:'/',
+      name: 'base',
+      redirect: '/login',
+    },
+    {
       path: '/signup',
       name: 'signup',
       component: SignupView,
@@ -29,16 +34,47 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const sessionJWT = localStorage.getItem(constants.localStorageKeys.sessionJWT);
-  // TODO: validate sessionJWT
-  /*
-    with only this implementation,
-    a user could do `localStorage.setItem('sessionJWT', 'not a real jwt');`
-    and gain access without authenticating
-  */
+  if (!requiresAuth) {
+    next();
+    return
+  }
   if (requiresAuth && !sessionJWT) {
     next('/login');
+    localStorage.removeItem(constants.localStorageKeys.sessionJWT);
+    return
   } else {
-    next();
+    const formData = {
+      jwt: sessionJWT,
+    };
+    const fetchOptions = {
+        headers: {
+        'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        mode: "cors",
+        body: JSON.stringify(formData),
+    };
+    fetch('http://localhost:8080/v1/session', fetchOptions)
+    .then(response => response.json())
+    .then(data => {
+      if (!data || !data.jwt) {
+        next('/login');
+        localStorage.removeItem(constants.localStorageKeys.sessionJWT);
+        return
+      }
+      if (sessionJWT !== data.jwt) {
+        next('/login');
+        localStorage.removeItem(constants.localStorageKeys.sessionJWT);
+        return
+      }
+      next();
+      return
+    })
+    .catch(error => {
+      console.error('Error submitting form:', error);
+      next('/login');
+      localStorage.removeItem(constants.localStorageKeys.sessionJWT);
+    });
   }
 });
 

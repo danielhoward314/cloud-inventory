@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	accountpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account"
+	authpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/auth"
 )
 
 func main() {
@@ -35,7 +36,11 @@ func main() {
 	mux := runtime.NewServeMux()
 	err = accountpb.RegisterAccountServiceHandler(context.Background(), mux, conn)
 	if err != nil {
-		log.Fatalf("failed to register the order server: %v", err)
+		log.Fatalf("failed to register the account server: %v", err)
+	}
+	err = authpb.RegisterAuthServiceHandler(context.Background(), mux, conn)
+	if err != nil {
+		log.Fatalf("failed to register the auth server: %v", err)
 	}
 
 	corsEnv := os.Getenv("CORS_ALLOW_LIST")

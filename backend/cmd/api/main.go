@@ -1,17 +1,22 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"google.golang.org/grpc"
+	"gopkg.in/gomail.v2"
 
-	"github.com/danielhoward314/cloud-inventory/backend/cmd/config"
+	ciPostgres "github.com/danielhoward314/cloud-inventory/backend/dao/postgres"
+	ciRedis "github.com/danielhoward314/cloud-inventory/backend/dao/redis"
 	accountpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account"
+	authpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/auth"
 	"github.com/danielhoward314/cloud-inventory/backend/services"
 )
 
@@ -60,21 +65,50 @@ func main() {
 		DB:   0, // use default DB
 	})
 
-	// JWT secret for user sesssions
-	jwtSecret := os.Getenv("JWT_SESSION_SECRET")
-	if jwtSecret == "" {
+	// SMTP dialer instance
+	smtpHost := os.Getenv("SMTP_HOST")
+	if smtpHost == "" {
+		log.Fatal("error: SMTP_HOST is empty")
+	}
+	smtpPortStr := os.Getenv("SMTP_PORT")
+	if smtpPortStr == "" {
+		log.Fatal("error: SMTP_PORT is empty")
+	}
+	smtpPort, err := strconv.Atoi(smtpPortStr)
+	if err != nil {
+		log.Fatal("error: invalid SMTP_PORT")
+	}
+	smtpDialer := gomail.NewDialer(smtpHost, smtpPort, "", "")
+	smtpDialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// JWT secret for user sessions
+	sessionJWTSecret := os.Getenv("JWT_SESSION_SECRET")
+	if sessionJWTSecret == "" {
 		log.Fatal("error: JWT_SESSION_SECRET is empty")
 	}
 
-	// dependency injection
-	cfg, err := config.NewAPIConfig(db, redisClient, jwtSecret)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	accountSvc := services.NewAccountService(cfg)
+	datastore := ciPostgres.NewDatastore(db)
+	registrationDatastore := ciRedis.NewRegistrationDatastore(redisClient)
+	sessionDatastore := ciRedis.NewSessionDatastore(redisClient, sessionJWTSecret)
+
+	// dependency injection for each gRPC service
+	accountSvc := services.NewAccountService(
+		datastore,
+		registrationDatastore,
+		sessionDatastore,
+		smtpDialer,
+	)
+
+	authSvc := services.NewAuthService(
+		datastore,
+		sessionDatastore,
+		sessionJWTSecret,
+		smtpDialer,
+	)
 
 	// register service layer implementations for gRPC service interfaces
 	accountpb.RegisterAccountServiceServer(s, accountSvc)
+	authpb.RegisterAuthServiceServer(s, authSvc)
 
 	// start gRPC server
 	log.Printf("server listening at %v", lis.Addr())

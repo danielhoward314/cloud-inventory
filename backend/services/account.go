@@ -3,19 +3,17 @@ package services
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"database/sql"
 	"html/template"
 	"log/slog"
 
+	"github.com/go-redis/redis/v8"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/gomail.v2"
 
-	"github.com/danielhoward314/cloud-inventory/backend/cmd/config"
 	"github.com/danielhoward314/cloud-inventory/backend/dao"
 	accountpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account"
-	"github.com/go-redis/redis/v8"
 )
 
 const (
@@ -31,13 +29,16 @@ type accountService struct {
 	smtpDialer            *gomail.Dialer
 }
 
-func NewAccountService(cfg *config.APIConfig) accountpb.AccountServiceServer {
-	smtpDialer := gomail.NewDialer(cfg.GetSMTPHost(), cfg.GetSMTPPort(), "", "")
-	smtpDialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+func NewAccountService(
+	datastore *dao.Datastore,
+	registrationDatastore dao.RegistrationDatastore,
+	sessionDataStore dao.SessionDatastore,
+	smtpDialer *gomail.Dialer,
+) accountpb.AccountServiceServer {
 	return &accountService{
-		datastore:             cfg.GetDatastore(),
-		registrationDatastore: cfg.GetRegistrationDatastore(),
-		sessionDatastore:      cfg.GetSessionDatastore(),
+		datastore:             datastore,
+		registrationDatastore: registrationDatastore,
+		sessionDatastore:      sessionDataStore,
 		smtpDialer:            smtpDialer,
 	}
 }
@@ -141,6 +142,11 @@ func (as *accountService) Verify(ctx context.Context, request *accountpb.Verific
 	err = as.datastore.Administrators.Update(administrator)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update administrator data: %s", err.Error())
+	}
+	err = as.registrationDatastore.Delete(request.Token)
+	if err != nil {
+		// non-fatal error, the registration data has a short TTL
+		slog.Warn("failed to delete registration data")
 	}
 	jwt, err := as.sessionDatastore.Create(&dao.Session{
 		OrganizationID:  administrator.OrganizationID,

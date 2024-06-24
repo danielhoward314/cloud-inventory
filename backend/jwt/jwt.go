@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -33,9 +34,7 @@ func GenerateJWT(secret string, claimsType ClaimsType, claimsData map[string]int
 	jwtID := uuid.NewString()
 	switch claimsType {
 	case Session:
-		// expirationTime := time.Now().Add(168 * time.Hour)
-		// TODO: change back to 1 week after jwt validation logic is complete
-		expirationTime := time.Now().Add(3 * time.Minute)
+		expirationTime := time.Now().Add(168 * time.Hour)
 		organizationID, ok := claimsData[OrganizationIDKey]
 		if !ok {
 			return "", errors.New("missing organization_id claims")
@@ -64,4 +63,28 @@ func GenerateJWT(secret string, claimsType ClaimsType, claimsData map[string]int
 		return tokenString, nil
 	}
 	return "", errors.New("unknown claims type")
+}
+
+func DecodeJWT(secret string, tokenString string, claimsType ClaimsType) error {
+	switch claimsType {
+	case Session:
+		claims := &SessionClaims{}
+		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(secret), nil
+		})
+		if err != nil {
+			return errors.New("failed to parse token")
+		}
+		if !parsedToken.Valid {
+			return errors.New("invalid token")
+		}
+		if claims.ExpiresAt < time.Now().Unix() {
+			return errors.New("session token expired")
+		}
+		return nil
+	}
+	return errors.New("unknown claims type")
 }

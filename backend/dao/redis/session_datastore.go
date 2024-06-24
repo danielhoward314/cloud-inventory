@@ -13,9 +13,7 @@ import (
 )
 
 const (
-	// sessionTokenTTL = time.Hour * 168
-	// TODO: change back to 1 week after jwt validation logic is complete
-	sessionTokenTTL = time.Minute * 3
+	sessionTokenTTL = time.Hour * 168
 )
 
 type sessionDatastore struct {
