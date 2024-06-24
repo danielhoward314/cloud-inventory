@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/cors"
@@ -57,7 +59,33 @@ func main() {
 	}).Handler(mux)
 
 	gatewayAddr := "[::]" + ":" + "8080"
-	if err = http.ListenAndServe(gatewayAddr, corsHandler); err != nil {
-		log.Fatal("gateway server closed abruptly: ", err)
+	server := http.Server{
+		Addr:         gatewayAddr,
+		Handler:      corsHandler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
+
+	// start server in its own goroutine
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			log.Fatalf("gateway server failed to listen: %v", err)
+		}
+	}()
+
+	// trap sigterm or interupt and gracefully shutdown the server
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
+
+	// block until a signal is received
+	sig := <-c
+	log.Println("Got signal:", sig)
+
+	// gracefully shutdown the server, waiting max 30 seconds for current operations to complete
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelFunc()
+	server.Shutdown(ctx)
 }
