@@ -5,10 +5,10 @@ import (
 	"errors"
 
 	_ "github.com/lib/pq"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/danielhoward314/cloud-inventory/backend/dao"
 	"github.com/danielhoward314/cloud-inventory/backend/dao/postgres/queries"
+	"github.com/danielhoward314/cloud-inventory/backend/passwords"
 )
 
 type administrators struct {
@@ -41,7 +41,7 @@ func (o *administrators) Create(administrator *dao.Administrator, primaryAdminis
 	if primaryAdministratorCleartextPassword == "" {
 		return "", errors.New("invalid administrator password cleartext")
 	}
-	passwordHash, err := hashPasswordWithBCrypt(primaryAdministratorCleartextPassword)
+	passwordHash, err := passwords.HashPasswordWithBCrypt(primaryAdministratorCleartextPassword)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +62,24 @@ func (o *administrators) Create(administrator *dao.Administrator, primaryAdminis
 
 func (o *administrators) Read(id string) (*dao.Administrator, error) {
 	administrator := &dao.Administrator{}
-	err := o.db.QueryRow(queries.AdministratorSelect, id).Scan(
+	err := o.db.QueryRow(queries.AdministratorsSelect, id).Scan(
+		&administrator.ID,
+		&administrator.Email,
+		&administrator.DisplayName,
+		&administrator.PasswordHashType,
+		&administrator.PasswordHash,
+		&administrator.OrganizationID,
+		&administrator.Verified,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return administrator, nil
+}
+
+func (o *administrators) ReadByEmail(email string) (*dao.Administrator, error) {
+	administrator := &dao.Administrator{}
+	err := o.db.QueryRow(queries.AdministratorsSelectByEmail, email).Scan(
 		&administrator.ID,
 		&administrator.Email,
 		&administrator.DisplayName,
@@ -97,11 +114,3 @@ func (o *administrators) Update(administrator *dao.Administrator) error {
 // func (o *administrators) Delete(id string) (*dao.Administrator, error) {
 // 	return nil, nil
 // }
-
-func hashPasswordWithBCrypt(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hashedPassword), nil
-}

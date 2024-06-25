@@ -42,9 +42,19 @@ func (o *organizations) Create(organization *dao.Organization) (string, error) {
 	return id, nil
 }
 
-// func (o *organizations) Read(id string) (*dao.Organization, error) {
-// 	return nil, nil
-// }
+func (o *organizations) Read(id string) (*dao.Organization, error) {
+	organization := &dao.Organization{}
+	err := o.db.QueryRow(queries.OrganizationsSelect, id).Scan(
+		&organization.ID,
+		&organization.PrimaryAdministratorEmail,
+		&organization.Name,
+		&organization.BillingPlanType,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return organization, nil
+}
 
 // func (o *organizations) Update(*dao.Organization) (*dao.Organization, error) {
 // 	return nil, nil

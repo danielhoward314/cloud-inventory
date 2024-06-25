@@ -9,7 +9,7 @@ type Organization struct {
 
 type Organizations interface {
 	Create(organizations *Organization) (string, error)
-	// Read(id string) (*Organization, error)
+	Read(id string) (*Organization, error)
 	// Update(*Organization) (*Organization, error)
 	// Delete(id string) (*Organization, error)
 }

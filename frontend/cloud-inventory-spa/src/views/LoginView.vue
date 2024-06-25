@@ -1,8 +1,9 @@
 <script setup>
+import LoginForm from '../components/LoginForm.vue'
 </script>
 
 <template>
   <main>
-    <p>Login</p>
+    <LoginForm />
   </main>
 </template>

@@ -4,7 +4,8 @@ const AdministratorsInsert = `INSERT INTO administrators (email, display_name, o
 VALUES ($1, $2, $3, $4, $5)
 RETURNING id`
 
-const AdministratorSelect = `SELECT id, email, display_name, password_hash_type, password_hash, organization_id, verified FROM administrators where id = $1`
+const AdministratorsSelect = `SELECT id, email, display_name, password_hash_type, password_hash, organization_id, verified FROM administrators where id = $1`
+const AdministratorsSelectByEmail = `SELECT id, email, display_name, password_hash_type, password_hash, organization_id, verified FROM administrators where email = $1`
 
 const AdministratorsUpdate = `UPDATE administrators
 SET

@@ -13,6 +13,7 @@ type Administrator struct {
 type Administrators interface {
 	Create(administrator *Administrator, passwordCleartext string) (string, error)
 	Read(id string) (*Administrator, error)
+	ReadByEmail(email string) (*Administrator, error)
 	Update(*Administrator) error
 	// Delete(id string) (*Administrator, error)
 }
