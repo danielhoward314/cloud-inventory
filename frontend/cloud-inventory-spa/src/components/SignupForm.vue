@@ -9,7 +9,7 @@
         </div>
       </form>
     </div>
-    <div v-else>
+    <div v-else class="card bg-primary">
       <h2>Organization Signup</h2>
       <form @submit.prevent="submitForm">
         <div>
