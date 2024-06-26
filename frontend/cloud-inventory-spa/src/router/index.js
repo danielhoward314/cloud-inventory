@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
-import SignupView from '../views/SignupView.vue'
+import LoginView from '@/views/LoginView.vue'
+import SignupView from '@/views/SignupView.vue'
 import constants from '@/consts/consts';
 
 const router = createRouter({
@@ -26,7 +26,7 @@ const router = createRouter({
       name: 'home',
       meta: { requiresAuth: true },
       // lazy-load when the route is visited
-      component: () => import('../views/HomeView.vue')
+      component: () => import('@/views/HomeView.vue')
     }
   ]
 })
