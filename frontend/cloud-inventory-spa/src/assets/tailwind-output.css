@@ -570,6 +570,26 @@ html {
   border-width: 0;
 }
 
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
+}
+
+.-top-2 {
+  top: -0.5rem;
+}
+
+.-top-2\.5 {
+  top: -0.625rem;
+}
+
+.right-0 {
+  right: 0px;
+}
+
 .flex {
   display: flex;
 }
@@ -580,6 +600,11 @@ html {
 
 .hidden {
   display: none;
+}
+
+.size-14 {
+  width: 3.5rem;
+  height: 3.5rem;
 }
 
 .size-24 {
@@ -614,6 +639,10 @@ html {
 
 .w-screen {
   width: 100vw;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .flex-col {

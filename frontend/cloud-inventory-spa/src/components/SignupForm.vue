@@ -1,7 +1,7 @@
 <template>
   <div class="md:w-1/2 bg-sky-500 hidden md:flex flex-col">
     <div class="w-full flex">
-      <slot name="icon" />
+      <slot name="brand-icon" />
       <div class="flex flex-col justify-center">
         <h1 class="text-lg text-white">Cloud Inventory</h1>
       </div>
@@ -16,7 +16,7 @@
       <form @submit.prevent="handleSubmit" ref="form" class="space-y-4">
         <div>
           <label for="verificationCode" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only">Verification Code</label>
-          <input type="text" id="verificationCode" v-model="verificationCode" @input="checkCodeLength" required class="flex h-9 sm:w-48 md:w-96 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+          <input type="text" id="verificationCode" v-model="verificationCode" @input="checkCodeLength" required class="flex h-9 sm:w-48 md:w-96 focus:bg-slate-100 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
         </div>
       </form>
     </div>
@@ -29,7 +29,7 @@
             placeholder="Organization Name"
             id="organizationName"
             v-model="organizationName"
-            customClass="flex h-9 sm:w-48 md:w-96 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            customClass="flex h-9 sm:w-48 md:w-96 focus:bg-slate-100 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
         </div>
@@ -39,7 +39,7 @@
             placeholder="Name"
             id="adminName"
             v-model="adminName"
-            customClass="flex h-9 sm:w-48 md:w-96 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            customClass="flex h-9 sm:w-48 md:w-96 focus:bg-slate-100 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
         </div>
@@ -50,20 +50,24 @@
             placeholder="name@email.com"
             id="adminEmail"
             v-model="adminEmail"
-            customClass="flex h-9 sm:w-48 md:w-96 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            customClass="flex h-9 sm:w-48 md:w-96 focus:bg-slate-100 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
         </div>
-        <div>
+        <div class="relative">
           <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only">Password</label>
           <CustomInput
-            type="password"
+            :type="passwordInputType"
             placeholder="Password"
             id="password"
             v-model="password"
-            customClass="flex h-9 sm:w-48 md:w-96 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            customClass="flex h-9 sm:w-48 md:w-96 focus:bg-slate-100 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
+          <span @click="togglePasswordVisibility" class="absolute -top-2.5 right-0 cursor-pointer size-14 p-5">
+            <slot v-if="isPasswordVisible" name="password-hide-icon" />
+            <slot v-else name="password-show-icon" />
+          </span>
         </div>
         <button type="submit" class="inline-flex sm:w-48 md:w-96 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-sky-950 text-white shadow hover:bg-sky-900/90 h-9 px-4 py-2">Sign Up</button>
       </form>
@@ -153,9 +157,18 @@ export default {
       adminEmail: '',
       adminName: '',
       password: '',
+      isPasswordVisible: false,
     };
   },
+  computed: {
+    passwordInputType() {
+      return this.isPasswordVisible ? 'text' : 'password';
+    },
+  },
   methods: {
+    togglePasswordVisibility() {
+      this.isPasswordVisible = !this.isPasswordVisible;
+    },
     submitForm() {
       const formData = {
         organization_name: this.organizationName,
