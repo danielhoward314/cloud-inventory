@@ -27,6 +27,13 @@ const router = createRouter({
       meta: { requiresAuth: true },
       // lazy-load when the route is visited
       component: () => import('@/views/HomeView.vue')
+    },
+    {
+      path: '/account',
+      name: 'account',
+      meta: { requiresAuth: true },
+      // lazy-load when the route is visited
+      component: () => import('@/views/AccountView.vue')
     }
   ]
 })

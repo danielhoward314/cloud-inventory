@@ -1,10 +1,3 @@
-<script setup>
-import CloudInventoryIcon from '@/components/icons/CloudInventoryIcon.vue';
-import PasswordHideIcon from '@/components/icons/PasswordHideIcon.vue';
-import PasswordShowIcon from '@/components/icons/PasswordShowIcon.vue';
-import SignupForm from '@/components/SignupForm.vue'
-</script>
-
 <template>
   <main class="flex h-screen w-screen">
     <SignupForm>
@@ -20,3 +13,10 @@ import SignupForm from '@/components/SignupForm.vue'
     </SignupForm>
   </main>
 </template>
+
+<script setup>
+  import CloudInventoryIcon from '@/components/icons/CloudInventoryIcon.vue';
+  import PasswordHideIcon from '@/components/icons/PasswordHideIcon.vue';
+  import PasswordShowIcon from '@/components/icons/PasswordShowIcon.vue';
+  import SignupForm from '@/components/SignupForm.vue'
+</script>

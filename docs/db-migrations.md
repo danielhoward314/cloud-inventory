@@ -54,4 +54,5 @@ For troubleshooting the `postgres` container, you can exec into it with this com
 
 ```
 docker exec -it postgres psql -U postgres postgres
+\c cloud_inventory
 ```
