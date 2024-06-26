@@ -1,9 +1,14 @@
 <script setup>
-import SignupForm from '../components/SignupForm.vue'
+import CloudInventoryIcon from '@/components/icons/CloudInventoryIcon.vue';
+import SignupForm from '@/components/SignupForm.vue'
 </script>
 
 <template>
-  <main class="grid grid-cols-1 grid-rows-1 bg-primary">
-    <SignupForm />
+  <main class="flex h-screen w-screen">
+    <SignupForm>
+      <template #icon>
+        <CloudInventoryIcon class="size-24 p-5" />
+      </template>
+    </SignupForm>
   </main>
 </template>
