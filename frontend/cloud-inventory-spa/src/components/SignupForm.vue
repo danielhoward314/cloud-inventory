@@ -57,7 +57,7 @@
         <div>
           <label for="password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 sr-only">Password</label>
           <CustomInput
-            type="text"
+            type="password"
             placeholder="Password"
             id="password"
             v-model="password"
