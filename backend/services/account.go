@@ -13,6 +13,8 @@ import (
 	"gopkg.in/gomail.v2"
 
 	"github.com/danielhoward314/cloud-inventory/backend/dao"
+	"github.com/danielhoward314/cloud-inventory/backend/dao/postgres"
+	ciJWT "github.com/danielhoward314/cloud-inventory/backend/jwt"
 	accountpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account"
 )
 
@@ -25,20 +27,20 @@ type accountService struct {
 	accountpb.UnimplementedAccountServiceServer
 	datastore             *dao.Datastore
 	registrationDatastore dao.RegistrationDatastore
-	sessionDatastore      dao.SessionDatastore
+	tokenDatastore        dao.TokenDatastore
 	smtpDialer            *gomail.Dialer
 }
 
 func NewAccountService(
 	datastore *dao.Datastore,
 	registrationDatastore dao.RegistrationDatastore,
-	sessionDataStore dao.SessionDatastore,
+	tokenDatastore dao.TokenDatastore,
 	smtpDialer *gomail.Dialer,
 ) accountpb.AccountServiceServer {
 	return &accountService{
 		datastore:             datastore,
 		registrationDatastore: registrationDatastore,
-		sessionDatastore:      sessionDataStore,
+		tokenDatastore:        tokenDatastore,
 		smtpDialer:            smtpDialer,
 	}
 }
@@ -71,9 +73,10 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 		return nil, status.Errorf(codes.Internal, "failed to create organization")
 	}
 	administrator := &dao.Administrator{
-		Email:          request.PrimaryAdministratorEmail,
-		DisplayName:    request.PrimaryAdministratorName,
-		OrganizationID: organizationID,
+		Email:             request.PrimaryAdministratorEmail,
+		DisplayName:       request.PrimaryAdministratorName,
+		OrganizationID:    organizationID,
+		AuthorizationRole: postgres.PrimaryAdmin,
 	}
 	administratorID, err := as.datastore.Administrators.Create(administrator, request.PrimaryAdministratorCleartextPassword)
 	if err != nil {
@@ -119,7 +122,7 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 	}, nil
 }
 
-// Verify validates email verification codes, updates the administrators.verified column & creates a user session
+// Verify validates email verification codes, updates the administrators.verified column & creates admin UI & API JWTs
 func (as *accountService) Verify(ctx context.Context, request *accountpb.VerificationRequest) (*accountpb.VerificationResponse, error) {
 	registration, err := as.registrationDatastore.Read(request.Token)
 	if err != nil {
@@ -148,14 +151,66 @@ func (as *accountService) Verify(ctx context.Context, request *accountpb.Verific
 		// non-fatal error, the registration data has a short TTL
 		slog.Warn("failed to delete registration data")
 	}
-	jwt, err := as.sessionDatastore.Create(&dao.Session{
-		OrganizationID:  administrator.OrganizationID,
-		AdministratorID: administrator.ID,
-	})
+	adminUIAccessToken, err := as.tokenDatastore.Create(
+		&dao.TokenData{
+			OrganizationID:    administrator.OrganizationID,
+			AdministratorID:   administrator.ID,
+			AuthorizationRole: administrator.AuthorizationRole,
+			TokenType:         ciJWT.Access,
+			ClaimsType:        ciJWT.AdminUISession,
+		},
+		ciJWT.Access,
+		ciJWT.AdminUISession,
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate jwt: %s", err.Error())
+	}
+	adminUIRefreshToken, err := as.tokenDatastore.Create(
+		&dao.TokenData{
+			OrganizationID:    administrator.OrganizationID,
+			AdministratorID:   administrator.ID,
+			AuthorizationRole: administrator.AuthorizationRole,
+			TokenType:         ciJWT.Refresh,
+			ClaimsType:        ciJWT.AdminUISession,
+		},
+		ciJWT.Refresh,
+		ciJWT.AdminUISession,
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate jwt: %s", err.Error())
+	}
+	apiAccessToken, err := as.tokenDatastore.Create(
+		&dao.TokenData{
+			OrganizationID:    administrator.OrganizationID,
+			AdministratorID:   administrator.ID,
+			AuthorizationRole: administrator.AuthorizationRole,
+			TokenType:         ciJWT.Access,
+			ClaimsType:        ciJWT.APIAuthorization,
+		},
+		ciJWT.Access,
+		ciJWT.APIAuthorization,
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate jwt: %s", err.Error())
+	}
+	apiRefreshToken, err := as.tokenDatastore.Create(
+		&dao.TokenData{
+			OrganizationID:    administrator.OrganizationID,
+			AdministratorID:   administrator.ID,
+			AuthorizationRole: administrator.AuthorizationRole,
+			TokenType:         ciJWT.Refresh,
+			ClaimsType:        ciJWT.APIAuthorization,
+		},
+		ciJWT.Refresh,
+		ciJWT.APIAuthorization,
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate jwt: %s", err.Error())
 	}
 	return &accountpb.VerificationResponse{
-		Jwt: jwt,
+		AdminUiAccessToken:  adminUIAccessToken,
+		AdminUiRefreshToken: adminUIRefreshToken,
+		ApiAccessToken:      apiAccessToken,
+		ApiRefreshToken:     apiRefreshToken,
 	}, nil
 }

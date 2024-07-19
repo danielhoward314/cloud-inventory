@@ -81,28 +81,33 @@ func main() {
 	smtpDialer := gomail.NewDialer(smtpHost, smtpPort, "", "")
 	smtpDialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
-	// JWT secret for user sessions
-	sessionJWTSecret := os.Getenv("JWT_SESSION_SECRET")
-	if sessionJWTSecret == "" {
-		log.Fatal("error: JWT_SESSION_SECRET is empty")
+	// secret for JWT access token generation
+	accessTokenSecret := os.Getenv("ACCESS_TOKEN_SECRET")
+	if accessTokenSecret == "" {
+		log.Fatal("error: ACCESS_TOKEN_SECRET is empty")
+	}
+
+	// secret for JWT refresh token generation
+	refreshTokenSecret := os.Getenv("REFRESH_TOKEN_SECRET")
+	if refreshTokenSecret == "" {
+		log.Fatal("error: REFRESH_TOKEN_SECRET is empty")
 	}
 
 	datastore := ciPostgres.NewDatastore(db)
 	registrationDatastore := ciRedis.NewRegistrationDatastore(redisClient)
-	sessionDatastore := ciRedis.NewSessionDatastore(redisClient, sessionJWTSecret)
+	tokenDatastore := ciRedis.NewTokenDatastore(redisClient, accessTokenSecret, refreshTokenSecret)
 
 	// dependency injection for each gRPC service
 	accountSvc := services.NewAccountService(
 		datastore,
 		registrationDatastore,
-		sessionDatastore,
+		tokenDatastore,
 		smtpDialer,
 	)
 
 	authSvc := services.NewAuthService(
 		datastore,
-		sessionDatastore,
-		sessionJWTSecret,
+		tokenDatastore,
 		smtpDialer,
 	)
 

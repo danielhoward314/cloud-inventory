@@ -1,13 +1,14 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '@/views/LoginView.vue'
-import SignupView from '@/views/SignupView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import LoginView from '@/views/LoginView.vue';
+import SignupView from '@/views/SignupView.vue';
 import constants from '@/consts/consts';
+import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path:'/',
+      path: '/',
       name: 'base',
       redirect: '/login',
     },
@@ -19,70 +20,103 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: LoginView,
     },
     {
       path: '/home',
       name: 'home',
       meta: { requiresAuth: true },
-      // lazy-load when the route is visited
-      component: () => import('@/views/HomeView.vue')
+      component: () => import('@/views/HomeView.vue'),
     },
     {
       path: '/account',
       name: 'account',
       meta: { requiresAuth: true },
-      // lazy-load when the route is visited
-      component: () => import('@/views/AccountView.vue')
-    }
-  ]
-})
+      component: () => import('@/views/AccountView.vue'),
+    },
+  ],
+});
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore();
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const sessionJWT = localStorage.getItem(constants.localStorageKeys.sessionJWT);
+  const token = localStorage.getItem(constants.localStorageKeys.adminUiAccessToken);
+
+  // unprotected route, allow navigation
   if (!requiresAuth) {
     next();
-    return
+    return;
   }
-  if (requiresAuth && !sessionJWT) {
+
+  // no access token in localStorage, user must authenticate
+  if (requiresAuth && !token) {
     next('/login');
-    localStorage.removeItem(constants.localStorageKeys.sessionJWT);
-    return
-  } else {
+    return;
+  }
+
+  // after one successful call to /session, should fall into this case
+  // to avoid further API calls
+  if (authStore.isAuthenticated && authStore.token === token) {
+    next();
+    return;
+  }
+
+  // call session API to validate the access token
+  // if valid, set in-memory state, which won't persist across app reloads
+  // 401s signal a valid, but expired access token
+  // call the refresh API, which will return a new access token if valid
+  try {
     const formData = {
-      jwt: sessionJWT,
+      jwt: token,
     };
     const fetchOptions = {
-        headers: {
+      headers: {
         'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        mode: "cors",
-        body: JSON.stringify(formData),
+      },
+      method: 'POST',
+      mode: 'cors',
+      body: JSON.stringify(formData),
     };
-    fetch('http://localhost:8080/v1/session', fetchOptions)
-    .then(response => response.json())
-    .then(data => {
-      if (!data || !data.jwt) {
+    const response = await fetch('http://localhost:8080/v1/session', fetchOptions);
+
+    if (response.status === 200) {
+      const data = await response.json();
+      if (!data || !data.jwt || data.jwt !== token) {
+        localStorage.removeItem(constants.localStorageKeys.adminUiAccessToken);
+        authStore.clearAuthentication();
         next('/login');
-        localStorage.removeItem(constants.localStorageKeys.sessionJWT);
-        return
+        return;
       }
-      if (sessionJWT !== data.jwt) {
-        next('/login');
-        localStorage.removeItem(constants.localStorageKeys.sessionJWT);
-        return
-      }
+      authStore.setAuthenticated(true, token);
       next();
-      return
-    })
-    .catch(error => {
-      console.error('Error submitting form:', error);
+      return;
+    } else if (response.status === 401) {
+      const refreshResponse = await fetch('http://localhost:8080/v1/refresh', fetchOptions);
+      const refreshData = await refreshResponse.json();
+      if (refreshData && refreshData.jwt) {
+        localStorage.setItem(constants.localStorageKeys.adminUiAccessToken, refreshData.jwt);
+        authStore.setAuthenticated(true, refreshData.jwt);
+        next('/home');
+        return;
+      } else {
+        localStorage.removeItem(constants.localStorageKeys.adminUiAccessToken);
+        authStore.clearAuthentication();
+        next('/login');
+        return;
+      }
+    } else {
+      localStorage.removeItem(constants.localStorageKeys.adminUiAccessToken);
+      authStore.clearAuthentication();
       next('/login');
-      localStorage.removeItem(constants.localStorageKeys.sessionJWT);
-    });
+      return;
+    }
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    localStorage.removeItem(constants.localStorageKeys.adminUiAccessToken);
+    authStore.clearAuthentication();
+    next('/login');
+    return;
   }
 });
 
-export default router
+export default router;

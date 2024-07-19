@@ -15,6 +15,14 @@ type administrators struct {
 	db *sql.DB
 }
 
+// AuthorizationRole is a type alias representing the postgres ENUM for the authorization_role column
+type AuthorizationRole string
+
+const (
+	// PrimaryAdmin is a string for the primary_admin authorization_role ENUM
+	PrimaryAdmin = "PRIMARY_ADMIN"
+)
+
 // PasswordHashType is a type alias representing the postgres ENUM for the password_hash_type column
 type PasswordHashType string
 
@@ -53,6 +61,7 @@ func (o *administrators) Create(administrator *dao.Administrator, primaryAdminis
 		administrator.OrganizationID,
 		BCryptHashType,
 		passwordHash,
+		administrator.AuthorizationRole,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -70,6 +79,7 @@ func (o *administrators) Read(id string) (*dao.Administrator, error) {
 		&administrator.PasswordHash,
 		&administrator.OrganizationID,
 		&administrator.Verified,
+		&administrator.AuthorizationRole,
 	)
 	if err != nil {
 		return nil, err
@@ -87,6 +97,7 @@ func (o *administrators) ReadByEmail(email string) (*dao.Administrator, error) {
 		&administrator.PasswordHash,
 		&administrator.OrganizationID,
 		&administrator.Verified,
+		&administrator.AuthorizationRole,
 	)
 	if err != nil {
 		return nil, err
@@ -103,6 +114,7 @@ func (o *administrators) Update(administrator *dao.Administrator) error {
 		administrator.PasswordHash,
 		administrator.OrganizationID,
 		administrator.Verified,
+		administrator.AuthorizationRole,
 		administrator.ID,
 	)
 	if err != nil {

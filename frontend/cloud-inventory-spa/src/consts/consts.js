@@ -1,6 +1,10 @@
 const constants = {
     localStorageKeys: {
-        sessionJWT: 'sessionJWT'
+        hasOnboarded: 'hasOnboarded',
+        adminUiAccessToken: 'adminUiAccessToken',
+        adminUiRefreshToken: 'adminUiRefreshToken',
+        apiAccessToken: 'apiAccessToken',
+        apiRefreshToken: 'apiRefreshToken',
     }
 };
 

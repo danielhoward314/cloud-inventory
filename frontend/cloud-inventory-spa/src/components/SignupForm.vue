@@ -125,9 +125,19 @@ export default {
       fetch('http://localhost:8080/v1/verify', fetchOptions)
       .then(response => response.json())
       .then(data => {
-        if (data.jwt) {
-          localStorage.setItem(constants.localStorageKeys.sessionJWT, data.jwt)
+        const allTokensPresent = (data &&
+          data.adminUiAccessToken &&
+          data.adminUiRefreshToken &&
+          data.apiAccessToken &&
+          data.apiRefreshToken);
+        if (allTokensPresent) {
+          localStorage.setItem(constants.localStorageKeys.adminUiAccessToken, data.adminUiAccessToken);
+          localStorage.setItem(constants.localStorageKeys.adminUiRefreshToken, data.adminUiRefreshToken);
+          localStorage.setItem(constants.localStorageKeys.apiAccessToken, data.apiAccessToken);
+          localStorage.setItem(constants.localStorageKeys.apiRefreshToken, data.apiRefreshToken);
           router.push('/home')
+        } else {
+          console.error('No verify response data received.');
         }
       })
       .catch(error => {
@@ -201,7 +211,6 @@ export default {
 };
 </script>
   
-  <style scoped>
-  /* Add your component styles here */
-  </style>
+<style scoped>
+</style>
   

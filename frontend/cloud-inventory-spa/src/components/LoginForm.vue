@@ -85,8 +85,16 @@ import CustomInput from '@/components/reusable/CustomInput.vue';
       fetch('http://localhost:8080/v1/login', fetchOptions)
       .then(response => response.json())
       .then(data => {
-        if (data && data.jwt) {
-          localStorage.setItem(constants.localStorageKeys.sessionJWT, data.jwt);
+        const allTokensPresent = (data &&
+          data.adminUiAccessToken &&
+          data.adminUiRefreshToken &&
+          data.apiAccessToken &&
+          data.apiRefreshToken);
+        if (allTokensPresent) {
+          localStorage.setItem(constants.localStorageKeys.adminUiAccessToken, data.adminUiAccessToken);
+          localStorage.setItem(constants.localStorageKeys.adminUiRefreshToken, data.adminUiRefreshToken);
+          localStorage.setItem(constants.localStorageKeys.apiAccessToken, data.apiAccessToken);
+          localStorage.setItem(constants.localStorageKeys.apiRefreshToken, data.apiRefreshToken);
           router.push('/home');
         } else {
           console.error('No login response data received.');

@@ -39,5 +39,8 @@ message VerificationRequest {
 }
 
 message VerificationResponse {
-  string jwt = 1;
+  string admin_ui_access_token = 1;
+  string admin_ui_refresh_token = 2;
+  string api_access_token = 3;
+  string api_refresh_token = 4;
 }
