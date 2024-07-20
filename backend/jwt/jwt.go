@@ -41,7 +41,7 @@ const (
 )
 
 const (
-	adminUIAccessTokenExpiry           = 3 * time.Hour
+	adminUIAccessTokenExpiry           = 1 * time.Hour
 	adminUIRefreshTokenExpiry          = 7 * 24 * time.Hour
 	apiAuthorizationAccessTokenExpiry  = 15 * time.Minute
 	apiAuthorizationRefreshTokenExpiry = 7 * 24 * time.Hour
@@ -138,6 +138,24 @@ func DecodeJWT(secret string, tokenString string, claimsType ClaimsType) error {
 	switch claimsType {
 	case AdminUISession:
 		claims := &AdminUISessionClaims{}
+		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(secret), nil
+		})
+		if err != nil {
+			return errors.New("failed to parse token")
+		}
+		if !parsedToken.Valid {
+			return errors.New(InvalidTokenError)
+		}
+		if claims.ExpiresAt < time.Now().Unix() {
+			return errors.New(TokenExpiredError)
+		}
+		return nil
+	case APIAuthorization:
+		claims := &APIAuthorizationClaims{}
 		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

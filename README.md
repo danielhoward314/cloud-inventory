@@ -38,3 +38,4 @@ In order to create a Cloud Inventory account, navigate to `cloud-inventory-ui.lo
 - [Protos](./docs/protos.md)
 - [Local containers](./docs/local-containers.md) such as `redis` or `maildev`
 - [tailwindcss](./docs/tailwindcss.md)
+- [authorization](./docs/authorization.md)

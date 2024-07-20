@@ -19,8 +19,11 @@ type administrators struct {
 type AuthorizationRole string
 
 const (
-	// PrimaryAdmin is a string for the primary_admin authorization_role ENUM
+	// PrimaryAdmin is a string for the primary admin authorization_role ENUM
 	PrimaryAdmin = "PRIMARY_ADMIN"
+
+	// SecondaryAdmin is a string for the secondary admin authorization_role ENUM
+	SecondaryAdmin = "SECONDARY_ADMIN"
 )
 
 // PasswordHashType is a type alias representing the postgres ENUM for the password_hash_type column

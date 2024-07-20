@@ -2,11 +2,11 @@
 // source: account/account.proto
 
 /*
-Package protogen is a reverse proxy.
+Package account is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package protogen
+package account
 
 import (
 	"context"

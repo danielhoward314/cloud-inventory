@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package providers;
+
+option go_package = "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/providers";
+
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+
+service ProvidersService {
+  rpc List (ListRequest) returns (ListResponse) {
+    option (google.api.http) = {
+      post: "/v1/providers"
+      body: "*"
+    };
+  }
+}
+
+message ListRequest {
+  string test = 1;
+}
+
+message ListResponse {
+  string test = 1;
+}

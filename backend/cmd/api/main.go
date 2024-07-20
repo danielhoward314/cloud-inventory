@@ -17,6 +17,8 @@ import (
 	ciRedis "github.com/danielhoward314/cloud-inventory/backend/dao/redis"
 	accountpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account"
 	authpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/auth"
+	orgspb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/organizations"
+	providerspb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/providers"
 	"github.com/danielhoward314/cloud-inventory/backend/services"
 )
 
@@ -82,8 +84,8 @@ func main() {
 	smtpDialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// secret for JWT access token generation
-	accessTokenSecret := os.Getenv("ACCESS_TOKEN_SECRET")
-	if accessTokenSecret == "" {
+	accessTokenJWTSecret := os.Getenv("ACCESS_TOKEN_SECRET")
+	if accessTokenJWTSecret == "" {
 		log.Fatal("error: ACCESS_TOKEN_SECRET is empty")
 	}
 
@@ -95,7 +97,7 @@ func main() {
 
 	datastore := ciPostgres.NewDatastore(db)
 	registrationDatastore := ciRedis.NewRegistrationDatastore(redisClient)
-	tokenDatastore := ciRedis.NewTokenDatastore(redisClient, accessTokenSecret, refreshTokenSecret)
+	tokenDatastore := ciRedis.NewTokenDatastore(redisClient, accessTokenJWTSecret, refreshTokenSecret)
 
 	// dependency injection for each gRPC service
 	accountSvc := services.NewAccountService(
@@ -111,9 +113,19 @@ func main() {
 		smtpDialer,
 	)
 
+	providersSvc := services.NewProvidersService(
+		datastore,
+	)
+
+	organizationsSvc := services.NewOrganizationsService(
+		datastore,
+	)
+
 	// register service layer implementations for gRPC service interfaces
 	accountpb.RegisterAccountServiceServer(s, accountSvc)
 	authpb.RegisterAuthServiceServer(s, authSvc)
+	providerspb.RegisterProvidersServiceServer(s, providersSvc)
+	orgspb.RegisterOrganizationsServiceServer(s, organizationsSvc)
 
 	// start gRPC server
 	log.Printf("server listening at %v", lis.Addr())
