@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v8"
+	"github.com/golang-jwt/jwt/v5"
 
 	ciPostgres "github.com/danielhoward314/cloud-inventory/backend/dao/postgres"
 	ciJWT "github.com/danielhoward314/cloud-inventory/backend/jwt"
@@ -76,7 +76,12 @@ func (am *authMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next
 		http.Error(w, "invalid API access token", http.StatusUnauthorized)
 		return
 	}
-	if claims.ExpiresAt < time.Now().Unix() {
+	expirationTime, err := claims.GetExpirationTime()
+	if err != nil {
+		http.Error(w, "failed to get expiration time from token", http.StatusUnauthorized)
+		return
+	}
+	if expirationTime.Before(time.Now()) {
 		http.Error(w, "expired API access token", http.StatusUnauthorized)
 		return
 	}

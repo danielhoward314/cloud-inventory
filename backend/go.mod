@@ -3,6 +3,7 @@ module github.com/danielhoward314/cloud-inventory/backend
 go 1.21.5
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240610135401-a8a62080eff3
@@ -23,7 +24,6 @@ require (
 )
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.21.1

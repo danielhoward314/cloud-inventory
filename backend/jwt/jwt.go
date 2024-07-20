@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
 	authpb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/auth"
@@ -50,29 +50,29 @@ const (
 type AdminUISessionClaims struct {
 	OrganizationID    string `json:"organization_id"`
 	AuthorizationRole string `json:"authorization_role"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 type APIAuthorizationClaims struct {
 	OrganizationID    string `json:"organization_id"`
 	AuthorizationRole string `json:"authorization_role"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func GenerateJWT(secret string, tokenType TokenType, claimsType ClaimsType, claimsData map[string]interface{}) (string, error) {
 	jwtID := uuid.NewString()
 	// fields common across all claims types
-	standardClaims := jwt.StandardClaims{
+	registeredClaims := jwt.RegisteredClaims{
 		Issuer:   issuerClaimValue,
-		IssuedAt: time.Now().Unix(),
-		Id:       jwtID,
+		IssuedAt: jwt.NewNumericDate(time.Now()),
+		ID:       jwtID,
 	}
 	switch claimsType {
 	case AdminUISession:
 		if tokenType == Access {
-			standardClaims.ExpiresAt = time.Now().Add(adminUIAccessTokenExpiry).Unix()
+			registeredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(adminUIAccessTokenExpiry))
 		} else {
-			standardClaims.ExpiresAt = time.Now().Add(adminUIRefreshTokenExpiry).Unix()
+			registeredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(adminUIRefreshTokenExpiry))
 		}
 		organizationID, ok := claimsData[OrganizationIDKey]
 		if !ok {
@@ -86,12 +86,12 @@ func GenerateJWT(secret string, tokenType TokenType, claimsType ClaimsType, clai
 		if !ok {
 			return "", errors.New("missing authorization_role claims")
 		}
-		standardClaims.Subject = administratorID.(string)
-		standardClaims.Audience = uiAudienceClaimValue
+		registeredClaims.Subject = administratorID.(string)
+		registeredClaims.Audience = []string{uiAudienceClaimValue}
 		claims := &AdminUISessionClaims{
 			OrganizationID:    organizationID.(string),
 			AuthorizationRole: authorizationRole.(string),
-			StandardClaims:    standardClaims,
+			RegisteredClaims:  registeredClaims,
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString([]byte(secret))
@@ -101,9 +101,9 @@ func GenerateJWT(secret string, tokenType TokenType, claimsType ClaimsType, clai
 		return tokenString, nil
 	case APIAuthorization:
 		if tokenType == Access {
-			standardClaims.ExpiresAt = time.Now().Add(apiAuthorizationAccessTokenExpiry).Unix()
+			registeredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(apiAuthorizationAccessTokenExpiry))
 		} else {
-			standardClaims.ExpiresAt = time.Now().Add(apiAuthorizationRefreshTokenExpiry).Unix()
+			registeredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(apiAuthorizationRefreshTokenExpiry))
 		}
 		organizationID, ok := claimsData[OrganizationIDKey]
 		if !ok {
@@ -117,12 +117,12 @@ func GenerateJWT(secret string, tokenType TokenType, claimsType ClaimsType, clai
 		if !ok {
 			return "", errors.New("missing authorization_role claims")
 		}
-		standardClaims.Subject = administratorID.(string)
-		standardClaims.Audience = apiAudienceClaimValue
+		registeredClaims.Subject = administratorID.(string)
+		registeredClaims.Audience = []string{apiAudienceClaimValue}
 		claims := &APIAuthorizationClaims{
 			OrganizationID:    organizationID.(string),
 			AuthorizationRole: authorizationRole.(string),
-			StandardClaims:    standardClaims,
+			RegisteredClaims:  registeredClaims,
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString([]byte(secret))
@@ -135,40 +135,37 @@ func GenerateJWT(secret string, tokenType TokenType, claimsType ClaimsType, clai
 }
 
 func DecodeJWT(secret string, tokenString string, claimsType ClaimsType) error {
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	}
+
 	switch claimsType {
 	case AdminUISession:
 		claims := &AdminUISessionClaims{}
-		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(secret), nil
-		})
+		token, err := jwt.ParseWithClaims(tokenString, claims, keyFunc)
 		if err != nil {
 			return errors.New("failed to parse token")
 		}
-		if !parsedToken.Valid {
+		if !token.Valid {
 			return errors.New(InvalidTokenError)
 		}
-		if claims.ExpiresAt < time.Now().Unix() {
+		if claims.ExpiresAt.Before(time.Now()) {
 			return errors.New(TokenExpiredError)
 		}
 		return nil
 	case APIAuthorization:
 		claims := &APIAuthorizationClaims{}
-		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(secret), nil
-		})
+		token, err := jwt.ParseWithClaims(tokenString, claims, keyFunc)
 		if err != nil {
 			return errors.New("failed to parse token")
 		}
-		if !parsedToken.Valid {
+		if !token.Valid {
 			return errors.New(InvalidTokenError)
 		}
-		if claims.ExpiresAt < time.Now().Unix() {
+		if claims.ExpiresAt.Before(time.Now()) {
 			return errors.New(TokenExpiredError)
 		}
 		return nil
