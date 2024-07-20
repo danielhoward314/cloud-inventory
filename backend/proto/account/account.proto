@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package account;
 
-option go_package = "github.com/danielhoward314/cloud-inventory/backend/protogen";
+option go_package = "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/account";
 
 import "google/api/annotations.proto";
 import "google/api/http.proto";

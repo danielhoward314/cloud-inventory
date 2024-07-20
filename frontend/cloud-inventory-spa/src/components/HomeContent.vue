@@ -1,11 +1,12 @@
 <template>
-    <section class="w-screen h-screen bg-sky-100">
-      <ProviderCard :providers="providers" />
-    </section>
+  <section class="w-screen h-screen bg-sky-100">
+    <ProviderCard :providers="providers" />
+  </section>
 </template>
 
 <script>
-import ProviderCard from '@/components/ProviderCard.vue';
+import xhrClient from '@/api'
+import ProviderCard from '@/components/ProviderCard.vue'
 
 export default {
   components: {
@@ -14,25 +15,30 @@ export default {
   data() {
     return {
       providers: []
-    };
+    }
   },
   mounted() {
-    this.fetchProviders();
+    this.getProviders()
   },
   methods: {
-    async fetchProviders() {
+    async getProviders() {
       try {
-        const response = await fetch('https://api.example.com/providers');
-        const data = await response.json();
-        this.providers = data.map(provider => ({
-          id: provider.id,
-          image: provider.image_url,
-          title: provider.name,
-          description: provider.description,
-          buttonText: provider.button_text
-        }));
+        const res = await xhrClient.getProviders({ test: 'test data here' })
+        console.log(res.data)
+        const resTwo = await xhrClient.getProvidersExtraConfig(
+          { test: 'test data here' },
+          { params: { id: 'madeup' } }
+        )
+        console.log(resTwo.data)
+        // this.providers = data.map((provider) => ({
+        //   id: provider.id,
+        //   image: provider.image_url,
+        //   title: provider.name,
+        //   description: provider.description,
+        //   buttonText: provider.button_text
+        // }))
       } catch (error) {
-        console.error('Error fetching providers:', error);
+        console.error('Error fetching providers:', error)
       }
     }
   }

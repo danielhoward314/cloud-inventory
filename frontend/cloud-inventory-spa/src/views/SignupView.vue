@@ -15,8 +15,8 @@
 </template>
 
 <script setup>
-  import CloudInventoryIcon from '@/components/icons/CloudInventoryIcon.vue';
-  import PasswordHideIcon from '@/components/icons/PasswordHideIcon.vue';
-  import PasswordShowIcon from '@/components/icons/PasswordShowIcon.vue';
-  import SignupForm from '@/components/SignupForm.vue'
+import CloudInventoryIcon from '@/components/icons/CloudInventoryIcon.vue'
+import PasswordHideIcon from '@/components/icons/PasswordHideIcon.vue'
+import PasswordShowIcon from '@/components/icons/PasswordShowIcon.vue'
+import SignupForm from '@/components/SignupForm.vue'
 </script>

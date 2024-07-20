@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
 export const useSignupStore = defineStore('signup', {
   state: () => ({
@@ -7,13 +7,13 @@ export const useSignupStore = defineStore('signup', {
   }),
   actions: {
     setHasToken(value) {
-      this.hasToken = value;
+      this.hasToken = value
     },
     setToken(value) {
-      this.token = value;
+      this.token = value
     },
     getToken() {
       return this.token
     }
   }
-});
+})

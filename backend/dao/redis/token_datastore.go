@@ -13,9 +13,13 @@ import (
 )
 
 const (
-	adminUIAccessTokenTTL           = 3 * time.Hour
+	// access token TTLs have a longer duration than the JWT expiration
+	// to allow for detecting a valid, but expired access token
+	adminUIAccessTokenTTL          = 3 * time.Hour
+	apiAuthorizationAccessTokenTTL = 45 * time.Minute
+
+	// refresh token TTLs match the JWT expiration
 	adminUIRefreshTokenTTL          = 7 * 24 * time.Hour
-	apiAuthorizationAccessTokenTTL  = 15 * time.Minute
 	apiAuthorizationRefreshTokenTTL = 7 * 24 * time.Hour
 )
 
