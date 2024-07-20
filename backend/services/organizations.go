@@ -11,7 +11,7 @@ import (
 	orgspb "github.com/danielhoward314/cloud-inventory/backend/protogen/golang/organizations"
 )
 
-// organizationsService implements the providers gRPC service
+// organizationsService implements the organizations gRPC service
 type organizationsService struct {
 	orgspb.UnimplementedOrganizationsServiceServer
 	datastore *dao.Datastore
