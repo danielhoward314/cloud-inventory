@@ -63,7 +63,3 @@ func (o *organizations) Read(id string) (*dao.Organization, error) {
 // func (o *organizations) Delete(id string) (*dao.Organization, error) {
 // 	return nil, nil
 // }
-
-func billingPlanTypeValid(input string) bool {
-	return input == FreeBillingPlanType
-}

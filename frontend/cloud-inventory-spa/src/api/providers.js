@@ -1,11 +1,6 @@
 import { baseClient } from './base'
 
-export async function getProviders(body) {
-  const res = await baseClient.post('/providers', body)
-  return res
-}
-
-export async function getProvidersExtraConfig(body, extraConfig) {
-  const res = await baseClient.post('/providers', body, extraConfig)
+export async function getProviders(organizationId) {
+  const res = await baseClient.get(`/providers/${organizationId}`)
   return res
 }

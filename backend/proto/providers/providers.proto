@@ -10,16 +10,40 @@ import "google/api/http.proto";
 service ProvidersService {
   rpc List (ListRequest) returns (ListResponse) {
     option (google.api.http) = {
-      post: "/v1/providers"
-      body: "*"
+      get: "/v1/providers/{organization_id}"
     };
   }
 }
 
 message ListRequest {
-  string test = 1;
+  string organization_id = 1;
+}
+
+message AWSMetdata {
+  string role_arn = 1;
+}
+
+message GCPMetdata {
+  string service_account_id = 1;
+}
+
+message AzureMetadata {
+  string service_account_id = 1;
+}
+
+message Provider {
+	string id = 1;
+  string external_identifier = 2;
+	string name = 3;
+  string provider_name = 4;
+  string organization_id = 5;
+  oneof metadata {
+    AWSMetdata aws_metadata = 6;
+    GCPMetdata gcp_metadata = 7;
+    AzureMetadata azure_metadata = 8;
+  }
 }
 
 message ListResponse {
-  string test = 1;
+  repeated Provider providers = 1;
 }

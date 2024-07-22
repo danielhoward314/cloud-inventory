@@ -5,6 +5,11 @@ const constants = {
     adminUiRefreshToken: 'adminUiRefreshToken',
     apiAccessToken: 'apiAccessToken',
     apiRefreshToken: 'apiRefreshToken'
+  },
+  providers: {
+    awsProviderName: 'AWS',
+    gcpProviderName: 'GCP',
+    azureProviderName: 'AZURE'
   }
 }
 

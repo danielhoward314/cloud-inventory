@@ -67,6 +67,7 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 		Name:                      request.OrganizationName,
 		PrimaryAdministratorEmail: request.PrimaryAdministratorEmail,
 	}
+	slog.Info("creating organization")
 	organizationID, err := as.datastore.Organizations.Create(organization)
 	if err != nil {
 		slog.Error(err.Error())
@@ -78,11 +79,13 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 		OrganizationID:    organizationID,
 		AuthorizationRole: postgres.PrimaryAdmin,
 	}
+	slog.Info("creating primary administrator", "organization_id", organizationID)
 	administratorID, err := as.datastore.Administrators.Create(administrator, request.PrimaryAdministratorCleartextPassword)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to create administrator")
 	}
+	slog.Info("creating registration data", "organization_id", organizationID, "administrator_id", administratorID)
 	token, emailCode, err := as.registrationDatastore.Create(&dao.Registration{
 		OrganizationID:  organizationID,
 		AdministratorID: administratorID,
@@ -96,11 +99,13 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 	}{
 		Code: emailCode,
 	}
+	slog.Info("parsing verification email template")
 	tmpl, err := template.ParseFiles("templates/verify_email.html")
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to parse registration email template %s", err.Error())
 	}
 	var body bytes.Buffer
+	slog.Info("executing verification email template")
 	err = tmpl.Execute(&body, emailTemplateData)
 	if err != nil {
 		slog.Error(err.Error())
@@ -112,6 +117,7 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 	m.SetHeader("To", request.PrimaryAdministratorEmail)
 	m.SetHeader("Subject", "Cloud Inventory: Verify your email")
 	m.SetBody("text/html", body.String())
+	slog.Info("sending verification email")
 	err = as.smtpDialer.DialAndSend(m)
 	if err != nil {
 		slog.Error(err.Error())
@@ -124,6 +130,14 @@ func (as *accountService) Signup(ctx context.Context, request *accountpb.SignupR
 
 // Verify validates email verification codes, updates the administrators.verified column & creates admin UI & API JWTs
 func (as *accountService) Verify(ctx context.Context, request *accountpb.VerificationRequest) (*accountpb.VerificationResponse, error) {
+	if request.Token == "" {
+		slog.Error("invalid token")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token")
+	}
+	if request.VerificationCode == "" {
+		slog.Error("invalid verification code")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid verification code")
+	}
 	registration, err := as.registrationDatastore.Read(request.Token)
 	if err != nil {
 		if err == redis.Nil {

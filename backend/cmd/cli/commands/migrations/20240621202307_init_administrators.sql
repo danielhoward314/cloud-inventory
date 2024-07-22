@@ -1,17 +1,22 @@
 -- +goose Up
 -- +goose StatementBegin
--- Create an enum that signals what hashing algorithm should be used for the password_hash
-CREATE TYPE password_hash_type AS ENUM (
-    'BCRYPT'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'password_hash_type') THEN
+        CREATE TYPE password_hash_type AS ENUM (
+            'BCRYPT'
+        );
+    END IF;
 
-CREATE TYPE authorization_role AS ENUM (
-    'PRIMARY_ADMIN',
-    'SECONDARY_ADMIN'
-);
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'authorization_role') THEN
+        CREATE TYPE authorization_role AS ENUM (
+            'PRIMARY_ADMIN',
+            'SECONDARY_ADMIN'
+        );
+    END IF;
+END$$;
 
--- Create the administrators table
-CREATE TABLE administrators (
+CREATE TABLE IF NOT EXISTS administrators (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     display_name VARCHAR(255),
@@ -31,5 +36,7 @@ CREATE TABLE administrators (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE administrators;
+DROP TABLE IF EXISTS administrators;
+DROP TYPE IF EXISTS authorization_role;
+DROP TYPE IF EXISTS password_hash_type;
 -- +goose StatementEnd

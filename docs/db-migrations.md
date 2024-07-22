@@ -34,7 +34,7 @@ To create a SQL migration file:
 docker compose run --rm cli create migration <name>
 ```
 
-This will create an empty migration file of the format `<timestamp>_<name>.sql` where `<name>` corresponds to the given CLI argument. The file will be in the `backend/cmd/cli/commands/migrations` directory.
+This will create an empty migration file of the format `<timestamp>_<name>.sql` where `<name>` corresponds to the given CLI argument. The file will be generated in the `backend/cmd/cli/commands/migrations` directory.
 
 To run all migrations through goose:
 

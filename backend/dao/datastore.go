@@ -4,4 +4,5 @@ package dao
 type Datastore struct {
 	Administrators Administrators
 	Organizations  Organizations
+	Providers      Providers
 }

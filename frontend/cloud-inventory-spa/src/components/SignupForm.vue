@@ -6,8 +6,11 @@
         <h1 class="text-lg text-white">Cloud Inventory</h1>
       </div>
     </div>
-    <h1 class="text-6xl text-white p-5 h-md:text-lg">A single pane of glass</h1>
-    <h1 class="text-6xl text-white p-5 h-md:text-lg">for all your cloud resources</h1>
+    <div>
+      <h1 class="text-6xl text-white mt-10 pl-5 h-md:text-lg">
+        A single pane of glass for all your cloud resources
+      </h1>
+    </div>
   </div>
   <div class="w-full md:w-1/2 flex flex-col justify-center items-center h-full">
     <div v-if="hasToken" class="p-5 flex flex-col justify-center items-center space-y-4">

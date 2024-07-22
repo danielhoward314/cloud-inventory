@@ -1,8 +1,7 @@
 import { getOrganization } from './organization'
-import { getProviders, getProvidersExtraConfig } from './providers'
+import { getProviders } from './providers'
 
 export default {
   getProviders,
-  getProvidersExtraConfig,
   getOrganization
 }

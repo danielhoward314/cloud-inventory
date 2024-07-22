@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 
 	"github.com/go-redis/redis/v8"
 	"google.golang.org/grpc/codes"
@@ -37,6 +38,10 @@ func NewAuthService(
 
 // ValidateSession validates admin ui session data submitted via a JWT in the request
 func (as *authService) ValidateSession(ctx context.Context, request *authpb.ValidateSessionRequest) (*authpb.ValidateSessionResponse, error) {
+	if request.Jwt == "" {
+		slog.Error("invalid session JWT")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid session JWT")
+	}
 	sessionTokenData, err := as.tokenDatastore.Read(request.Jwt)
 	if err != nil {
 		if err == redis.Nil {
@@ -70,6 +75,14 @@ func (as *authService) ValidateSession(ctx context.Context, request *authpb.Vali
 }
 
 func (as *authService) Login(ctx context.Context, request *authpb.LoginRequest) (*authpb.LoginResponse, error) {
+	if request.Email == "" {
+		slog.Error("invalid email")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid email")
+	}
+	if request.Password == "" {
+		slog.Error("invalid password")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid password")
+	}
 	administrator, err := as.datastore.Administrators.ReadByEmail(request.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -162,8 +175,9 @@ func (as *authService) Login(ctx context.Context, request *authpb.LoginRequest) 
 
 // RefreshToken takes in a refesh JWT of a given claims type and, if valid, returns a new access JWT of the same claims type
 func (as *authService) RefreshToken(ctx context.Context, request *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
-	if len(request.Jwt) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid argument: request.jwt")
+	if request.Jwt == "" {
+		slog.Error("invalid refresh JWT")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid refresh JWT")
 	}
 	claimsType, err := ciJWT.GetClaimsTypeFromProtoEnum(request.ClaimsType)
 	if err != nil {

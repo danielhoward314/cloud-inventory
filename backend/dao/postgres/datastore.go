@@ -11,5 +11,6 @@ func NewDatastore(db *sql.DB) *dao.Datastore {
 	return &dao.Datastore{
 		Administrators: NewAdministrators(db),
 		Organizations:  NewOrganizations(db),
+		Providers:      NewProviders(db),
 	}
 }

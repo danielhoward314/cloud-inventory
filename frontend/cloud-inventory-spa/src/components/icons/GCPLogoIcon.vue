@@ -4,8 +4,6 @@
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
   >
-    <clipPath id="a"><path d="m0 0h778.44v563.391h-778.44z" /></clipPath>
-    <clipPath id="b"><path d="m273.316 242.517h231.381v231.38h-231.381z" /></clipPath>
     <g transform="matrix(.35277777 0 0 -.35277777 -28.842193 158.685932)">
       <g clip-path="url(#a)" fill="#5f6368">
         <path
