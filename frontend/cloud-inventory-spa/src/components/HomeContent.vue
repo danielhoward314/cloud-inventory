@@ -4,7 +4,7 @@
       <div class="flex flex-col justify-center items-center">
         <h2 class="text-2xl font-bold text-sky-950">Add Provider Connection</h2>
         <p class="my-4 pb-4 text-sky-950 font-light">
-          Grant access to your cloud provider accounts
+          Grant access to your cloud provider accounts.
         </p>
       </div>
       <div class="flex justify-around">
@@ -19,8 +19,18 @@
         </div>
       </div>
     </BaseCard>
+    <div v-if="error" class="toast">
+  <div class="alert alert-error text-sky-100 text-wrap">
+    <span>Error loading provider connections</span>
+    <button @click="closeErrToast" class="btn btn-ghost">
+    <svg  class="w-3 h-3 hover:" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+        </svg>
+      </button>
+  </div>
+</div>
     <BaseCard class="w-1/2" bg="bg-sky-200">
-      <DataTable :value="rows" showGridlines>
+      <DataTable :value="rows" :loading="loading" showGridlines class="text-sky-950 bg-sky-100">
         <Column
           v-for="(col, idx) of columns"
           :key="idx"
@@ -33,7 +43,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useOrganizationStore } from '@/stores/organization'
 import xhrClient from '@/api'
 import DataTable from 'primevue/datatable'
@@ -43,6 +53,10 @@ import AWSLogoIcon from '@/components/icons/AWSLogoIcon.vue'
 import AzureLogoIcon from '@/components/icons/AzureLogoIcon.vue'
 import GCPLogoIcon from '@/components/icons/GCPLogoIcon.vue'
 import constants from '@/consts/consts'
+
+const loading = ref(true)
+const error = ref(false)
+const rows = ref()
 
 const columns = ref([
   { header: 'Name', field: 'display_name' },
@@ -71,10 +85,21 @@ onMounted(async () => {
         return row
       })
     }
-  } catch (error) {
-    console.error('Error fetching provider details:', error)
+    loading.value = false
+  } catch (e) {
+    console.error('Error fetching provider details:', e)
+    loading.value = false
+    error.value = true
   }
 })
 
-const rows = ref()
+const closeErrToast = () => {
+  error.value = false
+}
+
+onUnmounted(() => {
+  loading.value = true
+  error.value = false
+  rows.value = null
+})
 </script>
